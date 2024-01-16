@@ -4,8 +4,10 @@ import * as bcrypt from "bcrypt";
 import { RegisterDto } from './dto/register.dto';
 import { UsersRepository } from 'src/users/user.repository';
 import { ResetPasswordDto } from './dto/resetPassword.dto';
+import * as nodemailer from 'nodemailer';
 
 @Injectable()
+
 export class AuthService {
 
     constructor(private usersRepository: UsersRepository, private jwtService: JwtService) {}
@@ -48,6 +50,30 @@ export class AuthService {
 
     async sendForgotPasswordEmail(email: string): Promise<void> {
 
+        const token = await this.jwtService.sign({ email });
+
+        const emailContent = `
+          <p>Olá,</p>
+          <p>Clique no link abaixo para resetar sua senha:</p>
+          <a href="http://${process.env.LINK_APP}/reset-password/${token}">Reset Password</a>
+        `;
+    
+        const transporter = nodemailer.createTransport({
+          service: 'gmail',
+          auth: {
+            user: 'larissadalimar@gmail.com', 
+            pass: '#rio20Lar', 
+          },
+        });
+
+        const mailOptions = {
+          from: 'larissadalimar@gmail.com',
+          to: email,
+          subject: 'Reset sua senha em See Later App',
+          html: emailContent,
+        };
+    
+        await transporter.sendMail(mailOptions);
     }
 
     async resetPassword(form: ResetPasswordDto): Promise<void> {
