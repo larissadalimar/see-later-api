@@ -1,1 +1,5 @@
-export class Content {}
+export class Content {
+
+    Title: string;
+    
+}

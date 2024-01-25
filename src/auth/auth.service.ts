@@ -76,13 +76,12 @@ export class AuthService {
         await transporter.sendMail(mailOptions);
     }
 
-    async resetPassword(form: ResetPasswordDto): Promise<void> {
+    async resetPassword(token: string, resetPasswordDto: ResetPasswordDto): Promise<void> {
 
-        const { token, newPassword } = form;
+      const { newPassword } = resetPasswordDto;
+      const hashedPassword = await bcrypt.hash(newPassword, 10);
 
-        const hashedPassword = await bcrypt.hash(newPassword, 10);
-
-        await this.usersRepository.updatePassword( this.jwtService.verify(token).email, hashedPassword);
+      await this.usersRepository.updatePassword(this.jwtService.verify(token).email, hashedPassword);
     }
 
     async checkToken(token: string) {

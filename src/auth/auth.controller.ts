@@ -1,4 +1,4 @@
-import { Body, Controller, HttpCode, HttpStatus, Patch, Post } from '@nestjs/common';
+import { Body, Controller, Delete, HttpCode, HttpStatus, Param, Patch, Post, Query, Request, Res } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
@@ -31,7 +31,8 @@ constructor(private authService: AuthService) {}
   }
 
   @Post('reset-password')
-  async resetPassword(@Body() resetPasswordDto: ResetPasswordDto): Promise<void>{
-    await this.authService.resetPassword(resetPasswordDto);
+  async resetPassword(@Query('token') token: string, @Body() resetPasswordDto: ResetPasswordDto): Promise<void>{
+    await this.authService.resetPassword(token, resetPasswordDto);
   }
+
 }

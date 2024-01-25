@@ -1,26 +1,45 @@
 import { Injectable } from '@nestjs/common';
+import { ContentRepository } from './content.repository';
 import { CreateContentDto } from './dto/create-content.dto';
 import { UpdateContentDto } from './dto/update-content.dto';
 
 @Injectable()
 export class ContentService {
-  create(createContentDto: CreateContentDto) {
-    return 'This action adds a new content';
+
+  constructor(private readonly contentRepository: ContentRepository) {}
+
+  async create(createContentDto: CreateContentDto) {
+    
+    const userId = 1; //TODO: get from token 
+
+    return this.contentRepository.createContent(userId, createContentDto);
   }
 
-  findAll() {
-    return `This action returns all content`;
+  async findAll() {
+
+    const userId = 1; //TODO: get from token 
+
+    return this.contentRepository.getAllContents(userId);
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} content`;
+  async findOne(idContent: number) {
+
+    const userId = 1; //TODO: get from token 
+
+    return this.contentRepository.getContentById(idContent, userId);
   }
 
-  update(id: number, updateContentDto: UpdateContentDto) {
-    return `This action updates a #${id} content`;
+  async update(id: number, updateContentDto: UpdateContentDto) {
+
+    const userId = 1; //TODO: get from token 
+
+    return this.contentRepository.update(id, userId, updateContentDto);
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} content`;
+  async remove(id: number) {
+
+    const userId = 1; //TODO: get from token 
+
+    return this.contentRepository.deleteById(id, userId);
   }
 }
