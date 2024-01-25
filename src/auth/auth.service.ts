@@ -55,7 +55,7 @@ export class AuthService {
         const emailContent = `
           <p>Olá,</p>
           <p>Clique no link abaixo para resetar sua senha:</p>
-          <a href="http://${process.env.LINK_APP}/reset-password/${token}">Reset Password</a>
+          <a href="http://${process.env.LINK_APP}/reset-password?${token}">Reset Password</a>
         `;
     
         const transporter = nodemailer.createTransport({
