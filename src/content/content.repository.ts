@@ -9,13 +9,26 @@ export class ContentRepository {
   constructor(private readonly databaseService: DatabaseService) {}
     
   async getAllContents(idUser: number): Promise<any[]> {
-    const result = await this.databaseService.query('SELECT * FROM contents where userId = $1', [idUser]);
+    const result = await this.databaseService.query(`SELECT * FROM contents where "userId" = $1`, [idUser]);
     return result.rows;
   }
 
   async getContentById(contentId: number, userId: number): Promise<any[]> {
-    const result = await this.databaseService.query('SELECT * FROM contents where id = $1 and userId = $2', [contentId, userId]);
-    return result.rows;
+    
+    try {
+
+      const result = await this.databaseService.query(`SELECT * FROM contents where id = $1 and "userId" = $2`, [contentId, userId]);
+
+      if (!result.rows.length) {
+        throw new NotFoundException();
+      }
+
+      return result.rows[0];
+
+    } catch (error) {
+      
+      throw error;
+    }
   }
 
   async createContent(idUser: number, createContentDto: CreateContentDto): Promise<any> {
@@ -23,7 +36,7 @@ export class ContentRepository {
     const { title, url, notes } = createContentDto;
 
     const result = await this.databaseService.query(
-      'INSERT INTO contents (title, url, notes, userId, createdAt, updatedAt) VALUES ($1, $2, $3, $4, $5, $6)',
+      `INSERT INTO contents (title, url, notes, "userId", "createdAt", "updatedAt") VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
       [title, url, notes, idUser, new Date(), new Date()],
     );
 
@@ -32,15 +45,20 @@ export class ContentRepository {
 
   async deleteById(contentId: number, userId: number): Promise<any | null> {
 
-    const content = await this.getContentById(contentId, userId);
+    try {
+        
+      const content = await this.getContentById(contentId, userId);
 
-    if (!content) {
-      return 'Conteúdo Não Existe';
+      await this.databaseService.query(`DELETE FROM contents WHERE id = $1 and "userId" = $2`, [contentId, userId]);
+
+      return;
+
+    } catch (error) {
+      
+      console.error('Error: ', error);
+
+      throw error;
     }
-
-    await this.databaseService.query('DELETE FROM contents WHERE id = $1 and userId = $2', [contentId, userId]);
-
-    return 'Deletado com sucesso';
   }
 
 
@@ -49,23 +67,31 @@ export class ContentRepository {
     const { title, url, notes } = updateContentDto;
     let sqlFormatted = '';
 
-    if(title) sqlFormatted += ' title = ' + title;
-    if(url) sqlFormatted += ' url = ' + url;
-    if(notes) sqlFormatted += ' notes = ' + notes;
+    if (title) sqlFormatted += ' title = \'' + title + '\'';
+
+    if (url) {
+      if (sqlFormatted !== '') sqlFormatted += ' , ';
+      sqlFormatted += ' url = \'' + url + '\'';
+    }
+
+    if (notes) {
+      if (sqlFormatted !== '') sqlFormatted += ' , ';
+      sqlFormatted += ' notes = \'' + notes + '\'';
+    }
 
     try {
 
-      const result = await this.databaseService.query('UPDATE contents SET' + sqlFormatted + 'WHERE id = $1 and userId = $2', [id, userId]);
+      const result = await this.databaseService.query(`UPDATE contents SET` + sqlFormatted + ` WHERE id = $1 and "userId" = $2 RETURNING *`, [id, userId]);
 
       if (result.rows.length > 0) {
         return result.rows[0];
-      }
+      } else throw new NotFoundException();
 
-      return 'Conteúdo não existe';
     } catch (error) {
 
-      console.error('Error updating password:', error);
-      return undefined;
+      console.error('Error updating:', error);
+
+      throw error;
     }
   }
   

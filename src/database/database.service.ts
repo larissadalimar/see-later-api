@@ -10,6 +10,7 @@ export class DatabaseService {
     const connectionString = process.env.DB_CONNECTION_STRING || this.buildConnectionString();
     this.pool = new Pool({
       connectionString,
+      ssl: true
     });
   }
 

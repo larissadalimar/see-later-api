@@ -1,8 +1,8 @@
 CREATE TABLE users(
     id serial primary key,
     name VARCHAR(30) not null,
-    email varchar(50) not null,
-    password varchar(10) not null
+    email varchar(100) not null,
+    password varchar(50) not null
 );
 
 CREATE TABLE contents(

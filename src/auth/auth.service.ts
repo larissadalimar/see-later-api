@@ -21,7 +21,13 @@ export class AuthService {
         const valid = bcrypt.compareSync(password, user.password);
         if (!valid) throw new UnauthorizedException(`Email or password not valid.`);
 
-        const token = await this.jwtService.signAsync({ email: user.email }, { subject: String(user.id)})
+        const token = await this.jwtService.signAsync(
+          { email: user.email },
+          {
+            subject: String(user.id),
+            secret: process.env.JWT_SECRET // Include the secret key here
+          }
+        );
 
         return { token };
     }
@@ -43,7 +49,13 @@ export class AuthService {
             password: hashedPassword
         });
 
-        const token = await this.jwtService.signAsync({ email: userToCreate.email }, { subject: String(userToCreate.id)});
+        const token = await this.jwtService.signAsync(
+          { email: userToCreate.email },
+          {
+            subject: String(userToCreate.id),
+            secret: process.env.JWT_SECRET 
+          }
+        );
 
         return { token };
     }

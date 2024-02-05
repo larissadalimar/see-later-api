@@ -8,38 +8,35 @@ export class ContentService {
 
   constructor(private readonly contentRepository: ContentRepository) {}
 
-  async create(createContentDto: CreateContentDto) {
-    
-    const userId = 1; //TODO: get from token 
+  async create(userId: string, createContentDto: CreateContentDto) {
 
-    return this.contentRepository.createContent(userId, createContentDto);
+    return this.contentRepository.createContent(parseInt(userId), createContentDto);
   }
 
-  async findAll() {
+  async findAll(userId: string) {
 
-    const userId = 1; //TODO: get from token 
-
-    return this.contentRepository.getAllContents(userId);
+    return this.contentRepository.getAllContents(parseInt(userId));
   }
 
-  async findOne(idContent: number) {
+  async findOne(userId: string, idContent: number) {
 
-    const userId = 1; //TODO: get from token 
+    try {
+      
+      return this.contentRepository.getContentById(idContent, parseInt(userId));
 
-    return this.contentRepository.getContentById(idContent, userId);
+    } catch (error) {
+      throw error;
+    }
   }
 
-  async update(id: number, updateContentDto: UpdateContentDto) {
+  async update(userId: string, id: number, updateContentDto: UpdateContentDto) {
 
-    const userId = 1; //TODO: get from token 
-
-    return this.contentRepository.update(id, userId, updateContentDto);
+    return this.contentRepository.update(id, parseInt(userId), updateContentDto);
   }
 
-  async remove(id: number) {
+  async remove(userId: string, id: number) {
 
-    const userId = 1; //TODO: get from token 
 
-    return this.contentRepository.deleteById(id, userId);
+    return this.contentRepository.deleteById(id, parseInt(userId));
   }
 }
