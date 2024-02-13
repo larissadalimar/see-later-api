@@ -25,7 +25,7 @@ export class AuthService {
           { email: user.email },
           {
             subject: String(user.id),
-            secret: process.env.JWT_SECRET // Include the secret key here
+            secret: process.env.JWT_SECRET 
           }
         );
 
@@ -35,12 +35,12 @@ export class AuthService {
     async signUp(form: RegisterDto): Promise<{ token: string }> {
 
         const {name, email, confirm_email, password} = form;
+        
+        if(email !== confirm_email) throw new ConflictException('The confirm_email is not equal email');
 
         const user = await this.usersRepository.findOne(email);
 
         if (user) throw new ConflictException('This user already exists.');
-
-        if(email != confirm_email) throw new ConflictException('The confirm_email is not equal email');
 
         const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -71,15 +71,15 @@ export class AuthService {
         `;
     
         const transporter = nodemailer.createTransport({
-          service: 'gmail',
+          service: "Gmail",
           auth: {
-            user: 'larissadalimar@gmail.com', 
-            pass: '#rio20Lar', 
+            user: 'larissadalimar@dcc.ufrj.br', 
+            pass: 'dcc/lari10', 
           },
         });
 
         const mailOptions = {
-          from: 'larissadalimar@gmail.com',
+          from: 'larissadalimar@ic.ufrj.br',
           to: email,
           subject: 'Reset sua senha em See Later App',
           html: emailContent,
@@ -90,7 +90,11 @@ export class AuthService {
 
     async resetPassword(token: string, resetPasswordDto: ResetPasswordDto): Promise<void> {
 
-      const { newPassword } = resetPasswordDto;
+      const { newPassword, confirm_newPassword } = resetPasswordDto;
+
+      
+      if( newPassword !== confirm_newPassword) throw new ConflictException('Passwords are not equal');
+
       const hashedPassword = await bcrypt.hash(newPassword, 10);
 
       await this.usersRepository.updatePassword(this.jwtService.verify(token).email, hashedPassword);

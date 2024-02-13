@@ -1,4 +1,4 @@
-import { IsEmail, IsNotEmpty, IsString, MinLength } from "class-validator";
+import { Equals, IsEmail, IsNotEmpty, IsString, Matches, MinLength } from "class-validator";
 
 export class RegisterDto{
 
@@ -10,8 +10,9 @@ export class RegisterDto{
     @IsNotEmpty()
     @IsEmail({}, { message: 'Please enter correct email' })
     email: string;
-
-    @IsEmail({}, { message: 'Please enter correct email' })
+  
+    @IsNotEmpty()
+    @IsEmail({}, { message: 'Please enter correct confirm_email' })
     confirm_email: string;
     
     @IsNotEmpty()
