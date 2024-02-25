@@ -11,4 +11,6 @@ export class CreateContentDto {
     url: string;
 
     notes: Text;
+
+    categories: number[]
 }

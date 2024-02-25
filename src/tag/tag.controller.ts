@@ -48,4 +48,13 @@ export class TagController {
 
     return this.tagService.remove(+id, userId);
   }
+
+  @Get(':id/contents')
+  getAllTagContents(@Req() request: Request, @Param('id') id: string){
+
+    const userId = request["user"].sub;
+
+    return this.tagService.getAllTagContents(+id, userId);
+  }
+
 }

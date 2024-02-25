@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { TagToContentDto } from 'src/tag/dto/tag-content/tag-to-content';
 import { ContentRepository } from './content.repository';
 import { CreateContentDto } from './dto/create-content.dto';
 import { UpdateContentDto } from './dto/update-content.dto';
@@ -36,7 +37,22 @@ export class ContentService {
 
   async remove(userId: string, id: number) {
 
-
     return this.contentRepository.deleteById(id, parseInt(userId));
+  }
+
+  async addTagToContent(idContent: number, tagToContentDto: TagToContentDto){
+
+    return await this.contentRepository.addTagToContent(idContent, tagToContentDto.categories);
+  }
+
+  async removeTagFromContent(idContent: number, tagToContentDto: TagToContentDto){
+
+    await this.contentRepository.removeTagFromContent(idContent, tagToContentDto.categories);
+  }
+
+  async getAllContentTags(idContent: number, userId: number){
+
+    return await this.contentRepository.getAllContentTags(idContent, userId);
+  
   }
 }

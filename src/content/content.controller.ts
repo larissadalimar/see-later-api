@@ -1,5 +1,6 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req } from '@nestjs/common';
 import { AuthGuard } from 'src/auth/guard/auth.guard';
+import { TagToContentDto } from 'src/tag/dto/tag-content/tag-to-content';
 import { ContentService } from './content.service';
 import { CreateContentDto } from './dto/create-content.dto';
 import { UpdateContentDto } from './dto/update-content.dto';
@@ -54,5 +55,25 @@ export class ContentController {
     const userId = request["user"].sub;
 
     return this.contentService.remove(userId, +id);
+  }
+
+  @Post(':id/tag')
+  addTagToContent(@Req() request: Request, @Param('id') id: string,  @Body() tagToContentDto: TagToContentDto){
+
+    return this.contentService.addTagToContent(+id, tagToContentDto);
+  }
+
+  @Delete(':id/tag')
+  removeTagFromContent(@Req() request: Request, @Param('id') id: string,  @Body() tagToContentDto: TagToContentDto){
+
+    return this.contentService.removeTagFromContent(+id, tagToContentDto);
+  }
+
+  @Get(':id/tag')
+  getAllContentTags(@Req() request: Request, @Param('id') id: string){
+
+    const userId = request["user"].sub;
+
+    return this.contentService.getAllContentTags(+id, userId);
   }
 }

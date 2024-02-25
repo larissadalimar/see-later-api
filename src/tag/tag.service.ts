@@ -1,9 +1,11 @@
 import { Injectable, UseGuards } from '@nestjs/common';
 import { AuthGuard } from 'src/auth/guard/auth.guard';
 import { CreateTagDto } from './dto/create-tag.dto';
+import { TagToContentDto } from './dto/tag-content/tag-to-content';
 import { UpdateTagDto } from './dto/update-tag.dto';
 import { TagRepository } from './tag.repository';
 
+UseGuards(AuthGuard)
 @Injectable()
 export class TagService {
 
@@ -29,4 +31,11 @@ export class TagService {
   async remove(id: number, userId: number) {
     return await this.tagRepository.delete(id, userId);
   }
+
+  async getAllTagContents(idTag: number, userId: number){
+
+    await this.tagRepository.getAllTagContents(idTag, userId);
+  
+  }
+
 }

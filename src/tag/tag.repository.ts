@@ -87,4 +87,37 @@ export class TagRepository {
   }
   
 
+async getAllTagContents(tagId: number, userId: number){
+
+  try {
+
+    await this.getTagById(tagId, userId);
+
+    const result = await this.databaseService.query(
+      `
+      SELECT
+          c.*
+      FROM
+          contents c
+      JOIN
+        category_content ct ON c.id = ct.content_id
+      JOIN
+        categories cat ON ct.category_id = cat.id
+      WHERE
+          cat.id = $1
+          and cat."userId" = $2
+        ;
+
+      `, 
+      [tagId, userId]);
+
+    return result.rows;
+
+  } catch (error) {
+    
+    throw error;
+  }
+
+}
+
 }

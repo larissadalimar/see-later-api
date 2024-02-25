@@ -25,6 +25,6 @@ CREATE TABLE categories(
 
 CREATE TABLE category_content(
     id serial primary key,
-    "contentId" integer references contents(id),
-    "categoryId" integer references users(id)
+    content_id integer references contents(id),
+    category_id integer references categories(id),
 );
