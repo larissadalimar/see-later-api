@@ -1,8 +1,9 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req, Query } from '@nestjs/common';
 import { AuthGuard } from 'src/auth/guard/auth.guard';
 import { TagToContentDto } from 'src/tag/dto/tag-content/tag-to-content';
 import { ContentService } from './content.service';
 import { CreateContentDto } from './dto/create-content.dto';
+import { FilterDto } from './dto/filters.dto';
 import { UpdateContentDto } from './dto/update-content.dto';
 
 @Controller('content')
@@ -19,11 +20,11 @@ export class ContentController {
   }
 
   @Get()
-  findAll(@Req() request: Request) {
+  findAll(@Req() request: Request, @Query() filters: FilterDto) {
 
     const userId = request["user"].sub;
 
-    return this.contentService.findAll(userId);
+    return this.contentService.findAll(userId, filters);
   }
 
   @Get(':id')

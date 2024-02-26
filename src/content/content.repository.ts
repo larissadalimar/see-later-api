@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { DatabaseService } from 'src/database/database.service';
 import { TagRepository } from 'src/tag/tag.repository';
 import { CreateContentDto } from './dto/create-content.dto';
+import { FilterDto } from './dto/filters.dto';
 import { UpdateContentDto } from './dto/update-content.dto';
 
 @Injectable()
@@ -9,9 +10,34 @@ export class ContentRepository {
 
   constructor(private readonly databaseService: DatabaseService, private readonly tagRepository: TagRepository) {}
     
-  async getAllContents(idUser: number): Promise<any[]> {
-    const result = await this.databaseService.query(`SELECT * FROM contents where "userId" = $1`, [idUser]);
+  async getAllContents(idUser: number, filters: FilterDto): Promise<any[]> {
+    
+    const { categories, text, startDate, endDate } = filters;
+
+    let sqlWithFilters = 'SELECT DISTINCT c.id, c.* FROM contents c ';
+
+    if(Object.keys(filters).length) {
+
+      sqlWithFilters += ' LEFT JOIN category_content cc ON c.id = cc.content_id  where "userId" = $1';
+
+      if(text) sqlWithFilters += ` AND title like '%${text}%'`;
+
+      if (startDate) sqlWithFilters += ` AND "createdAt" >= '${startDate.toString()}'`;
+
+      if(endDate) sqlWithFilters += ` AND "createdAt" <= '${endDate.toString()}'`;
+
+      if(categories && categories.length) 
+      
+        sqlWithFilters += ` AND EXISTS (
+          SELECT 1 FROM category_content cc
+          WHERE cc.content_id = c.id AND cc.category_id IN (${categories})
+        )`;
+
+    } else sqlWithFilters += ' where "userId" = $1';
+
+    const result = await this.databaseService.query(sqlWithFilters, [idUser]);
     return result.rows;
+
   }
 
   async getContentById(contentId: number, userId: number): Promise<any[]> {
@@ -175,7 +201,6 @@ async getAllContentTags(contentId: number, userId: number){
       `, 
       [contentId, userId]);
 
-    console.log(result.rows);
     return result.rows[0]?.category_names;
 
   } catch (error) {

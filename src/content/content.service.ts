@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { TagToContentDto } from 'src/tag/dto/tag-content/tag-to-content';
 import { ContentRepository } from './content.repository';
 import { CreateContentDto } from './dto/create-content.dto';
+import { FilterDto } from './dto/filters.dto';
 import { UpdateContentDto } from './dto/update-content.dto';
 
 @Injectable()
@@ -14,9 +15,9 @@ export class ContentService {
     return this.contentRepository.createContent(parseInt(userId), createContentDto);
   }
 
-  async findAll(userId: string) {
+  async findAll(userId: string, filters: FilterDto) {
 
-    return this.contentRepository.getAllContents(parseInt(userId));
+    return this.contentRepository.getAllContents(parseInt(userId), filters);
   }
 
   async findOne(userId: string, idContent: number) {
