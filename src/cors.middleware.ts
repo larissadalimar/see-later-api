@@ -9,6 +9,8 @@ export class CorsMiddleware implements NestMiddleware {
 
     console.log("TESTE MIDLLEWARE");
 
+    console.log('req: ', req);
+
     res.header('Access-Control-Allow-Origin', 'https://lulugonn.github.io/');
 
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
@@ -27,7 +29,11 @@ export class CorsMiddleware implements NestMiddleware {
 
     req.headers['access-control-allow-credentials'] = 'true';
 
+    console.log('req: ', req, 'RES: ', res);
+
     if (req.method === 'OPTIONS') {
+
+        console.log(" chegou no options");
         res.status(200).end();
         return;
       }
