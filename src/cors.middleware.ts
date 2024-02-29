@@ -7,6 +7,8 @@ import { Request, Response, NextFunction } from 'express';
 export class CorsMiddleware implements NestMiddleware {
   use(req: Request, res: Response, next: NextFunction) {
 
+    console.log("TESTE MIDLLEWARE");
+
     res.header('Access-Control-Allow-Origin', 'https://lulugonn.github.io/');
 
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
