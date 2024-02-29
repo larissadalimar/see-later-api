@@ -15,9 +15,9 @@ export class CorsMiddleware implements NestMiddleware {
 
     res.setHeader('Access-Control-Allow-Credentials', 'true');
 
-    const origin = req.headers.origin as string;
+    //const origin = req.headers.origin as string;
 
-    req.headers['access-control-allow-origin'] = origin;
+    req.headers['access-control-allow-origin'] = 'https://lulugonn.github.io/';
 
     req.headers['access-control-allow-methods'] = 'GET, POST, OPTIONS, PUT, PATCH, DELETE';
 
