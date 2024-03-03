@@ -77,7 +77,7 @@ export class ContentRepository {
 
     try {
         
-      const content = await this.getContentById(contentId, userId);
+      await this.getContentById(contentId, userId);
 
       await this.databaseService.query(`DELETE FROM contents WHERE id = $1 and "userId" = $2`, [contentId, userId]);
 
@@ -208,6 +208,24 @@ async getAllContentTags(contentId: number, userId: number){
     throw error;
   }
 
+}
+
+async checkToSeen(userId: number, contentId: number){
+
+  try {
+
+    const seen = await this.getContentById(contentId, userId);
+
+    const result = await this.databaseService.query(`UPDATE contents SET seen = $3 WHERE id = $1 and "userId" = $2 RETURNING *;`, [contentId, userId, !seen["seen"]]);
+
+    console.log(result.rows);
+
+    if(!result.rows.length) throw new NotFoundException();
+    
+  } catch (error) {
+    
+    throw error;
+  }
 }
 
 }

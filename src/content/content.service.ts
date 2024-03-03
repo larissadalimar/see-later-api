@@ -56,4 +56,9 @@ export class ContentService {
     return await this.contentRepository.getAllContentTags(idContent, userId);
   
   }
+
+  async checkToSeen(userId: number, contentId: number){
+
+    return await this.contentRepository.checkToSeen(userId, contentId);
+  }
 }

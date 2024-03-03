@@ -12,29 +12,29 @@ export class ContentController {
   constructor(private readonly contentService: ContentService) {}
 
   @Post()
-  create(@Req() request: Request, @Body() createContentDto: CreateContentDto) {
+  async create(@Req() request: Request, @Body() createContentDto: CreateContentDto) {
 
     const userId = request["user"].sub;
 
-    return this.contentService.create(userId, createContentDto);
+    return await this.contentService.create(userId, createContentDto);
   }
 
   @Get()
-  findAll(@Req() request: Request, @Query() filters: FilterDto) {
+  async findAll(@Req() request: Request, @Query() filters: FilterDto) {
 
     const userId = request["user"].sub;
 
-    return this.contentService.findAll(userId, filters);
+    return await this.contentService.findAll(userId, filters);
   }
 
   @Get(':id')
-  findOne(@Req() request: Request, @Param('id') id: string) {
+  async findOne(@Req() request: Request, @Param('id') id: string) {
     
     const userId = request["user"].sub;
 
     try {
       
-      return this.contentService.findOne(userId, +id);
+      return await this.contentService.findOne(userId, +id);
 
     } catch (error) {
       
@@ -43,38 +43,47 @@ export class ContentController {
   }
 
   @Patch(':id')
-  update(@Req() request: Request, @Param('id') id: string, @Body() updateContentDto: UpdateContentDto) {
+  async update(@Req() request: Request, @Param('id') id: string, @Body() updateContentDto: UpdateContentDto) {
     
     const userId = request["user"].sub;
 
-    return this.contentService.update(userId, +id, updateContentDto);
+    return await this.contentService.update(userId, +id, updateContentDto);
   }
 
   @Delete(':id')
-  remove(@Req() request: Request, @Param('id') id: string) {
+  async remove(@Req() request: Request, @Param('id') id: string) {
 
     const userId = request["user"].sub;
 
-    return this.contentService.remove(userId, +id);
+    return await this.contentService.remove(userId, +id);
   }
 
   @Post(':id/tag')
-  addTagToContent(@Req() request: Request, @Param('id') id: string,  @Body() tagToContentDto: TagToContentDto){
+  async addTagToContent(@Req() request: Request, @Param('id') id: string,  @Body() tagToContentDto: TagToContentDto){
 
-    return this.contentService.addTagToContent(+id, tagToContentDto);
+    return await this.contentService.addTagToContent(+id, tagToContentDto);
   }
 
   @Delete(':id/tag')
-  removeTagFromContent(@Req() request: Request, @Param('id') id: string,  @Body() tagToContentDto: TagToContentDto){
+  async removeTagFromContent(@Req() request: Request, @Param('id') id: string,  @Body() tagToContentDto: TagToContentDto){
 
-    return this.contentService.removeTagFromContent(+id, tagToContentDto);
+    return await this.contentService.removeTagFromContent(+id, tagToContentDto);
   }
 
   @Get(':id/tag')
-  getAllContentTags(@Req() request: Request, @Param('id') id: string){
+  async getAllContentTags(@Req() request: Request, @Param('id') id: string){
 
     const userId = request["user"].sub;
 
-    return this.contentService.getAllContentTags(+id, userId);
+    return await this.contentService.getAllContentTags(+id, userId);
+  }
+
+  @Patch(':id/check')
+  async checkToSeen(@Req() request: Request, @Param('id') id: string){
+
+    const userId = request["user"].sub;
+
+    return await this.contentService.checkToSeen(userId, +id);
+
   }
 }
