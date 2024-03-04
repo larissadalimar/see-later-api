@@ -61,4 +61,14 @@ export class ContentService {
 
     return await this.contentRepository.checkToSeen(userId, contentId);
   }
+
+  async getProgress(userId: number){
+
+    const seenContents = await this.contentRepository.getContentsSeenByUser(userId);
+
+    const allContents = await this.contentRepository.getHowManyContentsByUser(userId);
+
+    return  allContents? (seenContents/allContents).toFixed(2) : 0;
+
+  }
 }

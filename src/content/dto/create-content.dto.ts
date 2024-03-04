@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsString, IsUrl } from "class-validator";
+import { IsNotEmpty, IsOptional, IsString, IsUrl } from "class-validator";
 
 export class CreateContentDto {
 
@@ -12,5 +12,8 @@ export class CreateContentDto {
 
     notes: Text;
 
-    categories: number[]
+    categories: number[];
+
+    @IsOptional()
+    seen?: boolean;
 }

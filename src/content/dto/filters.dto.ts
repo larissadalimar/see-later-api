@@ -16,4 +16,7 @@ export class FilterDto {
   @IsOptional()
   @IsDateString()
   endDate?: Date;
+
+  @IsOptional()
+  seen?: boolean;
 }

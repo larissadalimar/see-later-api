@@ -27,6 +27,14 @@ export class ContentController {
     return await this.contentService.findAll(userId, filters);
   }
 
+  @Get('/progress')
+  async getProgress(@Req() request: Request){
+
+    const userId = request["user"].sub;
+
+    return await this.contentService.getProgress(userId);
+  }
+
   @Get(':id')
   async findOne(@Req() request: Request, @Param('id') id: string) {
     
@@ -86,4 +94,5 @@ export class ContentController {
     return await this.contentService.checkToSeen(userId, +id);
 
   }
+
 }

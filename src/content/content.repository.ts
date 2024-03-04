@@ -228,4 +228,35 @@ async checkToSeen(userId: number, contentId: number){
   }
 }
 
+async getHowManyContentsByUser(userId: number){
+
+  try {
+    
+    const result = await this.databaseService.query(`SELECT COUNT(*) AS total_contents FROM contents WHERE "userId" = $1;`, [userId]);
+
+    return result.rows[0].total_contents;
+
+  } catch (error) {
+    
+    throw error;
+  }
+
+}
+
+async getContentsSeenByUser(userId: number){
+
+  try {
+    
+    const result = await this.databaseService.query(`SELECT COUNT(*) AS seen_contents FROM contents WHERE "userId" = $1 AND seen = TRUE;`, [userId]);
+
+    return result.rows[0].seen_contents;
+
+  } catch (error) {
+
+    throw error;
+  }
+
+}
+
+
 }
