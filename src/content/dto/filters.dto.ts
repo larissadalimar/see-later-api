@@ -19,4 +19,7 @@ export class FilterDto {
 
   @IsOptional()
   seen?: boolean;
+
+  @IsOptional()
+  type?: string;
 }

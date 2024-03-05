@@ -33,6 +33,8 @@ export class ContentService {
 
   async update(userId: string, id: number, updateContentDto: UpdateContentDto) {
 
+    await this.contentRepository.getContentById(id, parseInt(userId));
+
     return this.contentRepository.update(id, parseInt(userId), updateContentDto);
   }
 

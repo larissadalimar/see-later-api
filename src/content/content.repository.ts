@@ -12,7 +12,7 @@ export class ContentRepository {
     
   async getAllContents(idUser: number, filters: FilterDto): Promise<any[]> {
     
-    const { categories, text, startDate, endDate } = filters;
+    const { categories, text, startDate, endDate, seen, type } = filters;
 
     let sqlWithFilters = 'SELECT DISTINCT c.id, c.* FROM contents c ';
 
@@ -25,6 +25,10 @@ export class ContentRepository {
       if (startDate) sqlWithFilters += ` AND "createdAt" >= '${startDate.toString()}'`;
 
       if(endDate) sqlWithFilters += ` AND "createdAt" <= '${endDate.toString()}'`;
+
+      if(seen) sqlWithFilters += `AND seen = ${seen}`;
+
+      if(type) sqlWithFilters += `AND 'type' = ${type}`;
 
       if(categories && categories.length) 
       
@@ -60,11 +64,11 @@ export class ContentRepository {
 
   async createContent(idUser: number, createContentDto: CreateContentDto): Promise<any> {
 
-    const { title, url, notes, categories } = createContentDto;
+    const { title, url, notes, categories, type } = createContentDto;
 
     const result = await this.databaseService.query(
-      `INSERT INTO contents (title, url, notes, "userId", "createdAt", "updatedAt") VALUES ($1, $2, $3, $4, $5, $6) RETURNING *;`,
-      [title, url, notes, idUser, new Date(), new Date()],
+      `INSERT INTO contents (title, url, notes, "userId", "createdAt", "updatedAt", type ) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *;`,
+      [title, url, notes, idUser, new Date(), new Date(), type],
     );
 
     if(categories?.length > 0) this.addTagToContent(result.rows[0].id, categories);
@@ -94,7 +98,7 @@ export class ContentRepository {
 
   async update(id: number, userId: number, updateContentDto: UpdateContentDto): Promise<any | undefined> {
 
-    const { title, url, notes, categories } = updateContentDto;
+    const { title, url, notes, categories, seen, type } = updateContentDto;
     let sqlFormatted = '';
 
     if (title) sqlFormatted += ' title = \'' + title + '\'';
@@ -109,13 +113,23 @@ export class ContentRepository {
       sqlFormatted += ' notes = \'' + notes + '\'';
     }
 
+    if (seen) {
+      if (sqlFormatted !== '') sqlFormatted += ' , ';
+      sqlFormatted += ' seen = ' + seen ;
+    }
+
+    if (type) {
+      if (sqlFormatted !== '') sqlFormatted += ' , ';
+      sqlFormatted += ' type =  \'' + type + '\'';
+    }
+
     try {
 
       const result = await this.databaseService.query(`UPDATE contents SET` + sqlFormatted + ` WHERE id = $1 and "userId" = $2 RETURNING *`, [id, userId]);
 
-      if (result.rows.length > 0) {
+      if (result.rows?.length > 0) {
 
-        if(categories.length > 0) this.addTagToContent(result.rows[0].id, categories);
+        if(categories?.length > 0) this.addTagToContent(result.rows[0].id, categories);
 
         return result.rows[0];
       } else throw new NotFoundException();
@@ -237,7 +251,7 @@ async getHowManyContentsByUser(userId: number){
     return result.rows[0].total_contents;
 
   } catch (error) {
-    
+
     throw error;
   }
 

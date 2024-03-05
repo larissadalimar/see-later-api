@@ -10,10 +10,12 @@ export class CreateContentDto {
     @IsUrl()
     url: string;
 
-    notes: Text;
-
-    categories: number[];
+    @IsOptional()
+    notes?: string;
 
     @IsOptional()
-    seen?: boolean;
+    categories?: number[];
+
+    @IsNotEmpty()
+    type: string;
 }
