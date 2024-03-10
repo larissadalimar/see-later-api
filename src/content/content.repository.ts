@@ -48,7 +48,7 @@ export class ContentRepository {
     
     try {
 
-      const result = await this.databaseService.query(`SELECT * FROM contents where id = $1 and "userId" = $2`, [contentId, userId]);
+      const result = await this.databaseService.query(`SELECT * FROM contents where id = $1 and "userId" = $2;`, [contentId, userId]);
 
       if (!result.rows.length) {
         throw new NotFoundException();
@@ -261,9 +261,26 @@ async getContentsSeenByUser(userId: number){
 
   try {
     
-    const result = await this.databaseService.query(`SELECT COUNT(*) AS seen_contents FROM contents WHERE "userId" = $1 AND seen = TRUE;`, [userId]);
+    const result = await this.databaseService.query(`SELECT * FROM contents WHERE "userId" = $1 AND seen = TRUE;`, [userId]);
 
     return result.rows[0].seen_contents;
+
+  } catch (error) {
+
+    throw error;
+  }
+
+}
+
+async lastSavedContents(userId: number){
+
+  try {
+    
+    const result = await this.databaseService.query(`SELECT * FROM contents WHERE "userId" = $1 ORDER BY id DESC LIMIT 3;`, [userId]);
+
+    if(!result.rows.length) return { statusCode: 204, message: 'No Content' };
+
+    return result.rows;
 
   } catch (error) {
 

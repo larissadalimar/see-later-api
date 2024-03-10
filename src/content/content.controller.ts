@@ -35,6 +35,15 @@ export class ContentController {
     return await this.contentService.getProgress(userId);
   }
 
+  
+  @Get('feed')
+  async lastSavedContents(@Req() request: Request){
+
+    const userId = request["user"].sub;
+
+    return await this.contentService.lastSavedContents(userId);
+  }
+
   @Get(':id')
   async findOne(@Req() request: Request, @Param('id') id: string) {
     
@@ -94,5 +103,6 @@ export class ContentController {
     return await this.contentService.checkToSeen(userId, +id);
 
   }
+
 
 }

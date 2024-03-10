@@ -12,7 +12,7 @@ export class AuthService {
 
     constructor(private usersRepository: UsersRepository, private jwtService: JwtService) {}
 
-    async login(email: string, password: string): Promise<{ token: string }> {
+    async login(email: string, password: string): Promise<{ name: any, token: string }> {
 
         const user = await this.usersRepository.findOne(email);
 
@@ -29,7 +29,7 @@ export class AuthService {
           }
         );
 
-        return { token };
+        return { name: user.name, token: token };
     }
 
     async signUp(form: RegisterDto): Promise<{ token: string }> {

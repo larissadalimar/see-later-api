@@ -73,4 +73,10 @@ export class ContentService {
     return  allContents? (seenContents/allContents).toFixed(2) : 0;
 
   }
+
+  async lastSavedContents(userId: number){
+
+    return await this.contentRepository.lastSavedContents(userId);
+  }
+
 }
