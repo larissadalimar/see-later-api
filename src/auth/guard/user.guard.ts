@@ -19,7 +19,7 @@ export class UserGuard implements CanActivate {
 
         if (!user) throw new NotFoundException('This user does not exist.');
 
-        request['user'] = body.email;
+        request['user'] = user;
 
       } catch(e){
 

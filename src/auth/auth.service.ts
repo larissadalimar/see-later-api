@@ -5,6 +5,7 @@ import { RegisterDto } from './dto/register.dto';
 import { UsersRepository } from 'src/users/user.repository';
 import { ResetPasswordDto } from './dto/resetPassword.dto';
 import * as nodemailer from 'nodemailer';
+import { google } from 'googleapis';
 
 @Injectable()
 
@@ -60,44 +61,96 @@ export class AuthService {
         return { token };
     }
 
-    async sendForgotPasswordEmail(email: string): Promise<void> {
+    async createTransporter() {
+          
+      const OAuth2 = google.auth.OAuth2;
+      const oauth2Client = new OAuth2(
+        process.env.CLIENT_ID,
+        process.env.CLIENT_SECRET,
+        "https://developers.google.com/oauthplayground"
+      );
+    
+      oauth2Client.setCredentials({
+        refresh_token: process.env.REFRESH_TOKEN
+      });
 
-        const token = await this.jwtService.sign({ email });
+      const accessToken = await new Promise((resolve, reject) => {
+        oauth2Client.getAccessToken((err, token) => {
+          if (err) {
+            console.log(err);
+
+            reject("Failed to create access token :(");
+          }
+          resolve(token);
+        });
+      });
+
+      const transporter = nodemailer.createTransport({
+        service: "gmail",
+        auth: {
+          type: "OAuth2",
+          user: process.env.EMAIL,
+          accessToken,
+          clientId: process.env.CLIENT_ID,
+          clientSecret: process.env.CLIENT_SECRET,
+          refreshToken: process.env.REFRESH_TOKEN
+        },
+        tls: {
+          rejectUnauthorized: false
+      }
+      });
+
+      return transporter;
+
+    };
+
+    async sendForgotPasswordEmail(email: string, verificationCode: number): Promise<void> {
 
         const emailContent = `
           <p>Olá,</p>
-          <p>Clique no link abaixo para resetar sua senha:</p>
-          <a href="http://${process.env.LINK_APP}/reset-password?${token}">Reset Password</a>
+          <p>Envie o seguinte código para criar uma nova senha: (esse código expira em uma hora) </p>
+          <h2>${verificationCode}</h2>
         `;
-    
-        const transporter = nodemailer.createTransport({
-          service: "Gmail",
-          auth: {
-            user: 'larissadalimar@dcc.ufrj.br', 
-            pass: 'dcc/lari10', 
-          },
-        });
-
+        
         const mailOptions = {
-          from: 'larissadalimar@ic.ufrj.br',
+          from: process.env.EMAIL,
           to: email,
-          subject: 'Reset sua senha em See Later App',
+          subject: 'Crie uma nova senha em See Later App',
           html: emailContent,
         };
     
-        await transporter.sendMail(mailOptions);
+        try {
+          
+          let emailTransporter = await this.createTransporter();
+          await emailTransporter.sendMail(mailOptions);
+
+        } catch (error) {
+          console.log( error);
+
+          throw error;
+        }
     }
 
-    async resetPassword(token: string, resetPasswordDto: ResetPasswordDto): Promise<void> {
+    async resetPassword(resetPasswordDto: ResetPasswordDto): Promise<void> {
 
-      const { newPassword, confirm_newPassword } = resetPasswordDto;
+      const { email, verificationCode, newPassword, confirm_newPassword } = resetPasswordDto;
 
+      try {
+        
+        const userId = (await this.usersRepository.verifyCodeToResetPassword(email, verificationCode)).user_id;
       
-      if( newPassword !== confirm_newPassword) throw new ConflictException('Passwords are not equal');
+        if( newPassword !== confirm_newPassword) throw new ConflictException('Passwords are not equal');
 
-      const hashedPassword = await bcrypt.hash(newPassword, 10);
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
 
-      await this.usersRepository.updatePassword(this.jwtService.verify(token).email, hashedPassword);
+        await this.usersRepository.updatePassword(userId, hashedPassword);
+
+      } catch (error) {
+        
+        console.log(error);
+        throw error;
+        
+      }
     }
 
     async checkToken(token: string) {
@@ -110,4 +163,28 @@ export class AuthService {
           throw new BadRequestException(error);
         }
     }
+
+    async generateAndSendRandomNumber(userId: number, email: string){
+
+      
+      const randomNumber = Math.floor(Math.random() * 900000) + 100000;
+
+      const expirationDate = new Date();
+      expirationDate.setHours(expirationDate.getHours() + 1);
+
+      try {
+        
+        await this.usersRepository.saveVerificationCodeToResetPassword(userId, email, randomNumber, expirationDate);
+
+        await this.sendForgotPasswordEmail(email, randomNumber);
+
+      } catch (error) {
+        
+        console.log(error);
+        throw error;
+      }
+
+    }
+
+
 }

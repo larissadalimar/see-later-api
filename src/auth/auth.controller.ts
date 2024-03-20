@@ -28,13 +28,17 @@ constructor(private authService: AuthService) {}
 
   @UseGuards(UserGuard)
   @Post('forgot-password')
-  async forgotPassword(@Body('email') email: string): Promise<void> {
-    await this.authService.sendForgotPasswordEmail(email);
+  async forgotPassword(@Request() request, @Body('email') email: string): Promise<void> {
+
+    const userId = request["user"].id;
+
+    await this.authService.generateAndSendRandomNumber(userId, email);
   }
 
   @Post('reset-password')
-  async resetPassword(@Query('token') token: string, @Body() resetPasswordDto: ResetPasswordDto): Promise<void>{
-    await this.authService.resetPassword(token, resetPasswordDto);
+  async resetPassword(@Body() resetPasswordDto: ResetPasswordDto): Promise<void>{
+
+    await this.authService.resetPassword(resetPasswordDto);
   }
 
 }
