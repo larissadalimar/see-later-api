@@ -6,12 +6,14 @@ import { UsersRepository } from 'src/users/user.repository';
 import { ResetPasswordDto } from './dto/resetPassword.dto';
 import * as nodemailer from 'nodemailer';
 import { google } from 'googleapis';
+import { ContentService } from 'src/content/content.service';
+import { cardOnboarding } from 'src/utils/cardOnboarding';
 
 @Injectable()
 
 export class AuthService {
 
-    constructor(private usersRepository: UsersRepository, private jwtService: JwtService) {}
+    constructor(private usersRepository: UsersRepository, private jwtService: JwtService, private contentService: ContentService) {}
 
     async login(email: string, password: string): Promise<{ name: any, token: string }> {
 
@@ -33,12 +35,14 @@ export class AuthService {
         return { name: user.name, token: token };
     }
 
-    async signUp(form: RegisterDto): Promise<{ token: string }> {
+    async signUp(form: RegisterDto): Promise<{ name: string, token: string }> {
 
         const {name, email, confirm_email, password} = form;
         
         if(email !== confirm_email) throw new ConflictException('The confirm_email is not equal email');
 
+       try {
+        
         const user = await this.usersRepository.findOne(email);
 
         if (user) throw new ConflictException('This user already exists.');
@@ -58,7 +62,17 @@ export class AuthService {
           }
         );
 
-        return { token };
+        this.sendWelcomeEmail(userToCreate);
+
+        this.contentService.create(userToCreate.id, cardOnboarding);
+
+        return { name: userToCreate.name,  token };
+
+       } catch (error) {
+
+          console.log(error);
+          throw error;
+       }
     }
 
     async createTransporter() {
@@ -103,6 +117,42 @@ export class AuthService {
       return transporter;
 
     };
+
+    async sendWelcomeEmail(user: any){
+
+      const emailContent = `
+          <p>Olá, ${user.name}</p>
+          <p>Seja Bem Vindo ao See Later!</p>
+          <p>Trabalhamos ao máximo para tornar sua vida mais prática sem perder de vista aquele conteúdo importante. Aqui vai uma lista de coisas interessantes para você fazer no nosso app:</p>
+          <ul>
+            <li>Salvar conteúdos da web de diversos formatos para consumir depois</li>
+            <li>Consultar os conteúdos quando quiser, procurando na lista ou buscando através dos filtros inteligentes</li>
+            <li>Compartilhar, editar e excluir os conteúdos que você salvou</li>
+            <li>Checar seu progresso de consumo</li>
+          </ul>
+          </br>
+          <p>Esperamos que você curta bastante essas experiência e qualquer coisa pode nos dar feedback respondendo este e-mail, ok?</p>
+        `;
+        
+        const mailOptions = {
+          from: process.env.EMAIL,
+          to: user.email,
+          subject: 'Bem vindo ao See Later App!',
+          html: emailContent,
+        };
+    
+        try {
+          
+          let emailTransporter = await this.createTransporter();
+          await emailTransporter.sendMail(mailOptions);
+
+        } catch (error) {
+          console.log( error);
+
+          throw error;
+        }
+
+    }
 
     async sendForgotPasswordEmail(email: string, verificationCode: number): Promise<void> {
 
@@ -185,6 +235,4 @@ export class AuthService {
       }
 
     }
-
-
 }

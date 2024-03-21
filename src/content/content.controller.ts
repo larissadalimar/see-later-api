@@ -36,7 +36,7 @@ export class ContentController {
   }
 
   
-  @Get('feed')
+  @Get('last-contents')
   async lastSavedContents(@Req() request: Request){
 
     const userId = request["user"].sub;
