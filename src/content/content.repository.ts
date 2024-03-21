@@ -261,9 +261,9 @@ async getContentsSeenByUser(userId: number){
 
   try {
     
-    const result = await this.databaseService.query(`SELECT * FROM contents WHERE "userId" = $1 AND seen = TRUE;`, [userId]);
+    const result = await this.databaseService.query(`SELECT COUNT(*) FROM contents WHERE "userId" = $1 AND seen = TRUE;`, [userId]);
 
-    return result.rows[0].seen_contents;
+    return result.rows[0].count;
 
   } catch (error) {
 

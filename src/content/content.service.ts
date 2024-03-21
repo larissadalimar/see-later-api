@@ -66,9 +66,11 @@ export class ContentService {
 
   async getProgress(userId: number){
 
-    const seenContents = await this.contentRepository.getContentsSeenByUser(userId);
+    const seenContents = await this.contentRepository.getContentsSeenByUser(userId) ?? 0;
 
     const allContents = await this.contentRepository.getHowManyContentsByUser(userId);
+
+    console.log( "seen: ", seenContents, "all: ", allContents);
 
     return  allContents? (seenContents/allContents).toFixed(2) : 0;
 
