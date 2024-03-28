@@ -1,4 +1,4 @@
-import { IsArray, IsOptional, IsString, IsDateString } from 'class-validator';
+import { IsArray, IsOptional, IsString, IsDateString, IsBoolean, IsNumber, IsBooleanString, IsNumberString } from 'class-validator';
 
 export class FilterDto {
   @IsOptional()
@@ -18,8 +18,26 @@ export class FilterDto {
   endDate?: Date;
 
   @IsOptional()
+  @IsNumberString()
+  days: number;
+
+  @IsOptional()
+  @IsBooleanString()
   seen?: boolean;
 
   @IsOptional()
+  @IsString()
   type?: string;
+
+  @IsOptional()
+  @IsBooleanString()
+  favorite?: boolean;
+
+  @IsOptional()
+  @IsNumberString()
+  consume_date?: number;
+
+  @IsOptional()
+  @IsString()
+  order?: string;
 }

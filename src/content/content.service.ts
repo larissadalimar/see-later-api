@@ -81,4 +81,9 @@ export class ContentService {
     return await this.contentRepository.lastSavedContents(userId);
   }
 
+  async favoriteContent(userId: number, contentId: number){
+
+    return await this.contentRepository.checkToFavorite(userId, contentId);
+  }
+
 }

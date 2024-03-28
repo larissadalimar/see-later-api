@@ -12,7 +12,7 @@ export class ContentRepository {
     
   async getAllContents(idUser: number, filters: FilterDto): Promise<any[]> {
     
-    const { categories, text, startDate, endDate, seen, type } = filters;
+    const { categories, text, startDate, endDate, seen, type, favorite, consume_date, days, order} = filters;
 
     let sqlWithFilters = 'SELECT DISTINCT c.id, c.* FROM contents c ';
 
@@ -22,13 +22,29 @@ export class ContentRepository {
 
       if(text) sqlWithFilters += ` AND title like '%${text}%'`;
 
-      if (startDate) sqlWithFilters += ` AND "createdAt" >= '${startDate.toString()}'`;
+      if(startDate) sqlWithFilters += ` AND "createdAt" >= '${startDate.toString()}'`;
 
       if(endDate) sqlWithFilters += ` AND "createdAt" <= '${endDate.toString()}'`;
 
-      if(seen) sqlWithFilters += `AND seen = ${seen}`;
+      if(days){
+        let today = new Date();
+        let lastDate = new Date(today.getTime() - (days * 24 * 60 * 60 * 1000));
+        sqlWithFilters += ` AND "createdAt" >= '${lastDate.toISOString()}'`;
+      }
 
-      if(type) sqlWithFilters += `AND 'type' = ${type}`;
+      if(seen) sqlWithFilters += ` AND seen = ${seen}`;
+
+      if(type) sqlWithFilters += ` AND 'type' = ${type}`;
+
+      if(favorite) sqlWithFilters += ` AND favorite = ${favorite}`;
+
+      if(consume_date){
+
+        let lastDate = new Date();
+        var last = new Date(lastDate.getTime() + (consume_date * 24 * 60 * 60 * 1000));
+
+        sqlWithFilters += ` AND consume_date <= '${last.toISOString()}' AND consume_date >= '${lastDate.toISOString()}' `;
+      }
 
       if(categories && categories.length) 
       
@@ -38,6 +54,8 @@ export class ContentRepository {
         )`;
 
     } else sqlWithFilters += ' where "userId" = $1';
+
+    if(order) sqlWithFilters += ` order by c.id ${order}`;
 
     const result = await this.databaseService.query(sqlWithFilters, [idUser]);
     return result.rows;
@@ -64,12 +82,26 @@ export class ContentRepository {
 
   async createContent(idUser: number, createContentDto: CreateContentDto): Promise<any> {
 
-    const { title, url, notes, categories, type } = createContentDto;
+    const { title, url, notes, categories, type, consume_date } = createContentDto;
+
+    /*let sqlQuery = `INSERT INTO contents (title, url, notes, "userId", "createdAt", "updatedAt", type `;
+
+    if(consume_date) sqlQuery += `consume_date `;
+
+    sqlQuery += `) VALUES ($1, $2, $3, $4, $5, $6, $7 `;
+
+    if(consume_date) sqlQuery += `, $8 `;
+
+    sqlQuery += ") RETURNING *;"*/
 
     const result = await this.databaseService.query(
-      `INSERT INTO contents (title, url, notes, "userId", "createdAt", "updatedAt", type ) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *;`,
-      [title, url, notes, idUser, new Date(), new Date(), type],
+      `INSERT INTO contents (title, url, notes, "userId", "createdAt", "updatedAt", type, consume_date ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *;`,
+      [title, url, notes, idUser, new Date(), new Date(), type, consume_date],
     );
+
+    /*const result = await this.databaseService.query(sqlQuery,
+      consume_date? [title, url, notes, idUser, new Date(), new Date(), type, consume_date] : [title, url, notes, idUser, new Date(), new Date(), type],
+    );*/
 
     if(categories?.length > 0) this.addTagToContent(result.rows[0].id, categories);
 
@@ -98,7 +130,7 @@ export class ContentRepository {
 
   async update(id: number, userId: number, updateContentDto: UpdateContentDto): Promise<any | undefined> {
 
-    const { title, url, notes, categories, seen, type } = updateContentDto;
+    const { title, url, notes, categories, seen, type, favorite, consume_date } = updateContentDto;
     let sqlFormatted = '';
 
     if (title) sqlFormatted += ' title = \'' + title + '\'';
@@ -121,6 +153,16 @@ export class ContentRepository {
     if (type) {
       if (sqlFormatted !== '') sqlFormatted += ' , ';
       sqlFormatted += ' type =  \'' + type + '\'';
+    }
+
+    if (favorite) {
+      if (sqlFormatted !== '') sqlFormatted += ' , ';
+      sqlFormatted += ' favorite =  \'' + favorite + '\'';
+    }
+
+    if (consume_date) {
+      if (sqlFormatted !== '') sqlFormatted += ' , ';
+      sqlFormatted += ' consume_date =  \'' + consume_date + '\'';
     }
 
     try {
@@ -231,6 +273,24 @@ async checkToSeen(userId: number, contentId: number){
     const seen = await this.getContentById(contentId, userId);
 
     const result = await this.databaseService.query(`UPDATE contents SET seen = $3 WHERE id = $1 and "userId" = $2 RETURNING *;`, [contentId, userId, !seen["seen"]]);
+
+    console.log(result.rows);
+
+    if(!result.rows.length) throw new NotFoundException();
+    
+  } catch (error) {
+    
+    throw error;
+  }
+}
+
+async checkToFavorite(userId: number, contentId: number){
+
+  try {
+
+    const content = await this.getContentById(contentId, userId);
+
+    const result = await this.databaseService.query(`UPDATE contents SET favorite = $3 WHERE id = $1 and "userId" = $2 RETURNING *;`, [contentId, userId, !content["favorite"]]);
 
     console.log(result.rows);
 

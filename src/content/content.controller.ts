@@ -27,6 +27,7 @@ export class ContentController {
     return await this.contentService.findAll(userId, filters);
   }
 
+
   @Get('/progress')
   async getProgress(@Req() request: Request){
 
@@ -42,6 +43,14 @@ export class ContentController {
     const userId = request["user"].sub;
 
     return await this.contentService.lastSavedContents(userId);
+  }
+
+  @Patch(':id/favorite')
+  async favorite(@Req() request: Request, @Param('id') contentId: number) {
+
+    const userId = request["user"].sub;
+
+    return await this.contentService.favoriteContent(userId, contentId);
   }
 
   @Get(':id')

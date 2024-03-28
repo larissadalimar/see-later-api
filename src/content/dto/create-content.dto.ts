@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsOptional, IsString, IsUrl } from "class-validator";
+import { IsBoolean, IsDateString, IsNotEmpty, IsOptional, IsString, IsUrl } from "class-validator";
 
 export class CreateContentDto {
 
@@ -18,4 +18,8 @@ export class CreateContentDto {
 
     @IsNotEmpty()
     type: string;
+
+    @IsOptional()
+    @IsDateString()
+    consume_date?: Date;
 }
