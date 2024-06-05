@@ -4,10 +4,12 @@ import { UsersModule } from '../users/users.module';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { ContentModule } from 'src/content/content.module';
+import { TagModule } from 'src/tag/tag.module';
 
 @Module({
   imports: [UsersModule,
     forwardRef(() => ContentModule),
+    forwardRef(() => TagModule),
     JwtModule.register({
       global: true,
       secret: `${process.env.JWT_SECRET}`,

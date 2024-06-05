@@ -7,13 +7,14 @@ import { ResetPasswordDto } from './dto/resetPassword.dto';
 import * as nodemailer from 'nodemailer';
 import { google } from 'googleapis';
 import { ContentService } from 'src/content/content.service';
-import { cardOnboarding } from 'src/utils/cardOnboarding';
+import { cardOnboarding, tagOnboarding } from 'src/utils/cardOnboarding';
+import { TagService } from 'src/tag/tag.service';
 
 @Injectable()
 
 export class AuthService {
 
-    constructor(private usersRepository: UsersRepository, private jwtService: JwtService, private contentService: ContentService) {}
+    constructor(private usersRepository: UsersRepository, private jwtService: JwtService, private contentService: ContentService, private tagService: TagService) {}
 
     async login(email: string, password: string): Promise<{ name: any, token: string }> {
 
@@ -64,7 +65,11 @@ export class AuthService {
 
         this.sendWelcomeEmail(userToCreate);
 
-        this.contentService.create(userToCreate.id, cardOnboarding);
+        const category = await this.tagService.create(userToCreate.id, tagOnboarding);
+
+        const cardOnboardingWithCategory = {...cardOnboarding, categories: [category.id]};
+
+        this.contentService.create(userToCreate.id, cardOnboardingWithCategory);
 
         return { name: userToCreate.name,  token };
 
@@ -128,7 +133,7 @@ export class AuthService {
           <ul>
             <li>Salvar conteúdos da web de diversos formatos para consumir depois</li>
             <li>Consultar os conteúdos quando quiser, procurando na lista ou buscando através dos filtros inteligentes</li>
-            <li>Compartilhar, editar e excluir os conteúdos que você salvou</li>
+            <li>Editar e excluir os conteúdos que você salvou</li>
             <li>Checar seu progresso de consumo</li>
           </ul>
           </br>

@@ -10,6 +10,6 @@ import { TagToContentDto } from './dto/tag-content/tag-to-content';
   imports: [DatabaseModule, forwardRef(() => AuthModule)],
   controllers: [TagController],
   providers: [TagService, TagRepository, TagToContentDto],
-  exports: [TagRepository, TagToContentDto]
+  exports: [TagRepository, TagService, TagToContentDto]
 })
 export class TagModule {}
