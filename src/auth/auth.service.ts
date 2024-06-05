@@ -118,6 +118,7 @@ export class AuthService {
 
     };
 
+
     async sendWelcomeEmail(user: any){
 
       const emailContent = `
@@ -147,9 +148,8 @@ export class AuthService {
           await emailTransporter.sendMail(mailOptions);
 
         } catch (error) {
-          console.log( error);
 
-          throw error;
+          console.log(error);
         }
 
     }
@@ -175,9 +175,8 @@ export class AuthService {
           await emailTransporter.sendMail(mailOptions);
 
         } catch (error) {
-          console.log( error);
-
-          throw error;
+        
+          console.log(error);
         }
     }
 
@@ -231,7 +230,6 @@ export class AuthService {
       } catch (error) {
         
         console.log(error);
-        throw error;
       }
 
     }
