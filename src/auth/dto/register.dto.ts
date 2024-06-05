@@ -1,10 +1,11 @@
-import { Equals, IsEmail, IsNotEmpty, IsString, Matches, MinLength } from "class-validator";
+import { Equals, IsEmail, IsNotEmpty, IsString, Matches, MaxLength, MinLength } from "class-validator";
 
 export class RegisterDto{
 
     @IsNotEmpty()
     @IsString()
     @MinLength(4, { message: 'Name must be at least 4 characters long' })
+    @MaxLength(20, { message: 'Name can not have more than 10 characters long' })
     name: string;
 
     @IsNotEmpty()

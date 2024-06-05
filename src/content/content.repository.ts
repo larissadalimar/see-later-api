@@ -208,8 +208,6 @@ export class ContentRepository {
         tagsAssociated.push(tagCreated.rows[0]);
 
       })
-      
-      console.log(tagsAssociated);
 
       return tagsAssociated;
       
@@ -338,7 +336,7 @@ async lastSavedContents(userId: number){
     
     const result = await this.databaseService.query(`SELECT * FROM contents WHERE "userId" = $1 ORDER BY id DESC LIMIT 3;`, [userId]);
 
-    if(!result.rows.length) return { statusCode: 204, message: 'No Content' };
+    //if(!result.rows.length) return { statusCode: 204, message: 'No Content' };
 
     return result.rows;
 
