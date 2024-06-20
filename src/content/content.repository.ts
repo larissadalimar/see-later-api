@@ -11,62 +11,121 @@ export class ContentRepository {
   constructor(private readonly databaseService: DatabaseService, private readonly tagRepository: TagRepository) {}
     
   async getAllContents(idUser: number, filters: FilterDto): Promise<any[]> {
-    
-    const { categories, text, startDate, endDate, seen, type, favorite, consume_date, days, order} = filters;
-
-    let sqlWithFilters = 'SELECT DISTINCT c.id, c.* FROM contents c ';
-
-    if(Object.keys(filters).length) {
-
-      sqlWithFilters += ' LEFT JOIN category_content cc ON c.id = cc.content_id  where "userId" = $1';
-
-      if(text) sqlWithFilters += ` AND title like '%${text}%'`;
-
-      if(startDate) sqlWithFilters += ` AND "createdAt" >= '${startDate.toString()}'`;
-
-      if(endDate) sqlWithFilters += ` AND "createdAt" <= '${endDate.toString()}'`;
-
-      if(days){
-        let today = new Date();
-        let lastDate = new Date(today.getTime() - (days * 24 * 60 * 60 * 1000));
-        sqlWithFilters += ` AND "createdAt" >= '${lastDate.toISOString()}'`;
-      }
-
-      if(seen) sqlWithFilters += ` AND seen = ${seen}`;
-
-      if(type) sqlWithFilters += ` AND 'type' = ${type}`;
-
-      if(favorite) sqlWithFilters += ` AND favorite = ${favorite}`;
-
-      if(consume_date){
-
-        let lastDate = new Date();
-        var last = new Date(lastDate.getTime() + (consume_date * 24 * 60 * 60 * 1000));
-
-        sqlWithFilters += ` AND consume_date <= '${last.toISOString()}' AND consume_date >= '${lastDate.toISOString()}' `;
-      }
-
-      if(categories && categories.length) 
-      
-        sqlWithFilters += ` AND EXISTS (
-          SELECT 1 FROM category_content cc
-          WHERE cc.content_id = c.id AND cc.category_id IN (${categories})
-        )`;
-
-    } else sqlWithFilters += ' where "userId" = $1';
-
-    if(order) sqlWithFilters += ` order by c.id ${order}`;
-
-    const result = await this.databaseService.query(sqlWithFilters, [idUser]);
+    const { categories, text, startDate, endDate, seen, type, favorite, consume_date, days, order } = filters;
+  
+    let sqlWithFilters = `
+      SELECT
+        c.id,
+        c.title,
+        c.url,
+        c."type",
+        c."createdAt",
+        JSON_AGG(
+          JSON_BUILD_OBJECT(
+            'id', cat.id,
+            'name', cat.name
+          )
+        ) AS categories
+      FROM
+        contents c
+      JOIN
+        category_content cc ON c.id = cc.content_id
+      JOIN
+        categories cat ON cc.category_id = cat.id
+      WHERE
+        c."userId" = $1
+    `;
+  
+    const queryParams: any[] = [idUser];
+    let paramIndex = queryParams.length + 1;
+  
+    if (text) {
+      sqlWithFilters += ` AND c.title ILIKE $${paramIndex++}`;
+      queryParams.push(`%${text}%`);
+    }
+  
+    if (startDate) {
+      sqlWithFilters += ` AND c."createdAt" >= $${paramIndex++}`;
+      queryParams.push(startDate);
+    }
+  
+    if (endDate) {
+      sqlWithFilters += ` AND c."createdAt" <= $${paramIndex++}`;
+      queryParams.push(endDate);
+    }
+  
+    if (days) {
+      let today = new Date();
+      let lastDate = new Date(today.getTime() - (days * 24 * 60 * 60 * 1000));
+      sqlWithFilters += ` AND c."createdAt" >= $${paramIndex++}`;
+      queryParams.push(lastDate.toISOString());
+    }
+  
+    if (seen !== undefined) {
+      sqlWithFilters += ` AND c.seen = $${paramIndex++}`;
+      queryParams.push(seen);
+    }
+  
+    if (type) {
+      sqlWithFilters += ` AND c."type" = $${paramIndex++}`;
+      queryParams.push(type);
+    }
+  
+    if (favorite !== undefined) {
+      sqlWithFilters += ` AND c.favorite = $${paramIndex++}`;
+      queryParams.push(favorite);
+    }
+  
+    if (consume_date) {
+      let lastDate = new Date();
+      var last = new Date(lastDate.getTime() + (consume_date * 24 * 60 * 60 * 1000));
+      sqlWithFilters += ` AND c.consume_date <= $${paramIndex++} AND c.consume_date >= $${paramIndex++}`;
+      queryParams.push(last.toISOString(), lastDate.toISOString());
+    }
+  
+    if (categories && categories.length) {
+      sqlWithFilters += ` AND EXISTS (
+        SELECT 1 FROM category_content cc
+        WHERE cc.content_id = c.id AND cc.category_id = ANY($${paramIndex++}::int[])
+      )`;
+      queryParams.push(categories);
+    }
+  
+    sqlWithFilters += " GROUP BY c.id";
+  
+    if (order) {
+      sqlWithFilters += ` ORDER BY c.id ${order.toUpperCase()}`;
+    }
+  
+    console.log(sqlWithFilters, queryParams);
+  
+    const result = await this.databaseService.query(sqlWithFilters, queryParams);
     return result.rows;
-
   }
+  
 
   async getContentById(contentId: number, userId: number): Promise<any[]> {
     
     try {
 
-      const result = await this.databaseService.query(`SELECT * FROM contents where id = $1 and "userId" = $2;`, [contentId, userId]);
+      const result = 
+      await this.databaseService.query(`SELECT
+                                          c.*,
+                                          JSON_AGG(
+                                            JSON_BUILD_OBJECT(
+                                              'id', cat.id,
+                                              'name', cat.name
+                                            )
+                                          ) AS categories
+                                        FROM
+                                          contents c
+                                        JOIN
+                                          category_content cc ON c.id = cc.content_id
+                                        JOIN
+                                          categories cat ON cc.category_id = cat.id
+                                        WHERE
+                                          c."userId" = $1 and c.id = $2
+                                        group by c.id;`, [userId, contentId]);
 
       if (!result.rows.length) {
         throw new NotFoundException();
