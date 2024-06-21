@@ -14,26 +14,27 @@ export class ContentRepository {
     const { categories, text, startDate, endDate, seen, type, favorite, consume_date, days, order } = filters;
   
     let sqlWithFilters = `
-      SELECT
-        c.id,
-        c.title,
-        c.url,
-        c."type",
-        c."createdAt",
-        JSON_AGG(
-          JSON_BUILD_OBJECT(
-            'id', cat.id,
-            'name', cat.name
-          )
-        ) AS categories
-      FROM
-        contents c
-      JOIN
-        category_content cc ON c.id = cc.content_id
-      JOIN
-        categories cat ON cc.category_id = cat.id
-      WHERE
-        c."userId" = $1
+          SELECT
+          c.id,
+          c.title,
+          c.url,
+          c."type",
+          c."createdAt",
+          COALESCE(
+            JSON_AGG(
+              JSON_BUILD_OBJECT(
+                'id', cat.id,
+                'name', cat.name
+              )
+            ) FILTER (WHERE cat.id IS NOT NULL), '[]'
+          ) AS categories
+        FROM
+          contents c
+        LEFT JOIN
+          category_content cc ON c.id = cc.content_id
+        LEFT JOIN
+          categories cat ON cc.category_id = cat.id
+          WHERE c."userId" = $1
     `;
   
     const queryParams: any[] = [idUser];
@@ -109,23 +110,29 @@ export class ContentRepository {
     try {
 
       const result = 
-      await this.databaseService.query(`SELECT
-                                          c.*,
-                                          JSON_AGG(
-                                            JSON_BUILD_OBJECT(
-                                              'id', cat.id,
-                                              'name', cat.name
-                                            )
-                                          ) AS categories
-                                        FROM
-                                          contents c
-                                        JOIN
-                                          category_content cc ON c.id = cc.content_id
-                                        JOIN
-                                          categories cat ON cc.category_id = cat.id
-                                        WHERE
-                                          c."userId" = $1 and c.id = $2
-                                        group by c.id;`, [userId, contentId]);
+      await this.databaseService.query(`
+          SELECT
+            c.id,
+            c.title,
+            c.url,
+            c."type",
+            c."createdAt",
+            COALESCE(
+              JSON_AGG(
+                JSON_BUILD_OBJECT(
+                  'id', cat.id,
+                  'name', cat.name
+                )
+              ) FILTER (WHERE cat.id IS NOT NULL), '[]'
+            ) AS categories
+          FROM
+            contents c
+          LEFT JOIN
+            category_content cc ON c.id = cc.content_id
+          LEFT JOIN
+            categories cat ON cc.category_id = cat.id
+            WHERE c."userId" = $1 and c.id = $2
+            group by c.id;`, [userId, contentId]);
 
       if (!result.rows.length) {
         throw new NotFoundException();
@@ -393,7 +400,7 @@ async lastSavedContents(userId: number){
 
   try {
     
-    const result = await this.databaseService.query(`SELECT * FROM contents WHERE "userId" = $1 ORDER BY id DESC LIMIT 3;`, [userId]);
+    const result = await this.databaseService.query(`SELECT * FROM contents WHERE "userId" = $1 AND seen = false ORDER BY id DESC LIMIT 3;`, [userId]);
 
     //if(!result.rows.length) return { statusCode: 204, message: 'No Content' };
 
