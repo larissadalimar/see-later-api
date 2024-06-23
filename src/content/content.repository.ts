@@ -112,11 +112,7 @@ export class ContentRepository {
       const result = 
       await this.databaseService.query(`
           SELECT
-            c.id,
-            c.title,
-            c.url,
-            c."type",
-            c."createdAt",
+            c.*,
             COALESCE(
               JSON_AGG(
                 JSON_BUILD_OBJECT(
