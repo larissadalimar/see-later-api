@@ -43,6 +43,16 @@ export class TagRepository {
     return result.rows[0];
   }
 
+  async findByName(idUser: number, name: string){
+
+    const result = await this.databaseService.query(
+      `SELECT * FROM categories where "userId" = $1 and LOWER(name) = LOWER($2)`,
+      [idUser, name.trim()],
+    );
+
+    return result.rows[0];
+  }
+
   async delete(tagId: number, userId: number): Promise<any | null> {
 
     try {

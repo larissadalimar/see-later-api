@@ -3,6 +3,7 @@ import { TagService } from './tag.service';
 import { CreateTagDto } from './dto/create-tag.dto';
 import { UpdateTagDto } from './dto/update-tag.dto';
 import { AuthGuard } from 'src/auth/guard/auth.guard';
+import { TagGuard } from './guard/tag.guard';
 
 @Controller('tag')
 @UseGuards(AuthGuard)
@@ -10,6 +11,7 @@ export class TagController {
   constructor(private readonly tagService: TagService) {}
 
   @Post()
+  @UseGuards(TagGuard)
   create(@Req() request: Request, @Body() createTagDto: CreateTagDto) {
 
     const userId = request["user"].sub;

@@ -246,8 +246,6 @@ export class ContentRepository {
 
       let categoriesToRemove = contentCategories.filter((category) => !categories.includes(category.toString()))
 
-      //console.log(contentCategories, categories, categoriesToRemove);
-
       if(categoriesToRemove[0] !== null ) this.removeTagFromContent(id, categoriesToRemove);
 
       const newTags = categories.filter(elemento => !contentCategories.includes(elemento))
