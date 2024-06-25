@@ -69,7 +69,7 @@ export class ContentRepository {
   
     if (type) {
       sqlWithFilters += ` AND c."type" = $${paramIndex++}`;
-      queryParams.push(type);
+      queryParams.push(type.toLowerCase());
     }
   
     if (favorite !== undefined) {
@@ -83,16 +83,16 @@ export class ContentRepository {
       sqlWithFilters += ` AND c.consume_date <= $${paramIndex++} AND c.consume_date >= $${paramIndex++}`;
       queryParams.push(last.toISOString(), lastDate.toISOString());
     }
-  
-    if (categories && categories.length) {
-      sqlWithFilters += ` AND EXISTS (
-        SELECT 1 FROM category_content cc
-        WHERE cc.content_id = c.id AND cc.category_id = ANY($${paramIndex++}::int[])
-      )`;
-      queryParams.push(categories);
-    }
+
+    
   
     sqlWithFilters += " GROUP BY c.id";
+  
+    if (categories && categories.length) {
+      sqlWithFilters += ` HAVING
+      COUNT ( DISTINCT CASE WHEN cat.id = ANY($${paramIndex++}::int[]) THEN cat.id ELSE NULL END) = ${categories.length} `;
+      queryParams.push(categories.map(num => parseInt(num, 10)));
+    }
   
     if (order) {
       sqlWithFilters += ` ORDER BY c.id ${order.toUpperCase()}`;
@@ -227,16 +227,45 @@ export class ContentRepository {
       sqlFormatted += ' consume_date =  \'' + consume_date + '\'';
     }
 
+    if(categories?.length > 0){
+
+      const beforeContentCategories = 
+        await this.databaseService.query(`SELECT
+            cat.id AS category_id
+          FROM
+            contents c
+          LEFT JOIN
+            category_content cc ON c.id = cc.content_id
+          LEFT JOIN
+            categories cat ON cc.category_id = cat.id
+          WHERE
+            c.id = $1 AND c."userId" = $2;
+          `, [id, userId]);
+
+      let contentCategories = beforeContentCategories.rows.map(id => id.category_id);
+
+      let categoriesToRemove = contentCategories.filter((category) => !categories.includes(category.toString()))
+
+      //console.log(contentCategories, categories, categoriesToRemove);
+
+      if(categoriesToRemove[0] !== null ) this.removeTagFromContent(id, categoriesToRemove);
+
+      const newTags = categories.filter(elemento => !contentCategories.includes(elemento))
+
+      if(newTags[0] !== null )  this.addTagToContent(id, newTags);
+
+    }
+
+    if(sqlFormatted.length < 1) return;
+
     try {
+
 
       const result = await this.databaseService.query(`UPDATE contents SET` + sqlFormatted + ` WHERE id = $1 and "userId" = $2 RETURNING *`, [id, userId]);
 
-      if (result.rows?.length > 0) {
-
-        if(categories?.length > 0) this.addTagToContent(result.rows[0].id, categories);
-
+      if (result.rows?.length > 0)
         return result.rows[0];
-      } else throw new NotFoundException();
+       else throw new NotFoundException();
 
     } catch (error) {
 
@@ -396,7 +425,7 @@ async lastSavedContents(userId: number){
 
   try {
     
-    const result = await this.databaseService.query(`SELECT * FROM contents WHERE "userId" = $1 AND seen = false ORDER BY id DESC LIMIT 3;`, [userId]);
+    const result = await this.databaseService.query(`SELECT * FROM contents WHERE "userId" = $1 ORDER BY id DESC LIMIT 3;`, [userId]);
 
     //if(!result.rows.length) return { statusCode: 204, message: 'No Content' };
 
