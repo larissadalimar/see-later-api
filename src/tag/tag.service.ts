@@ -34,7 +34,7 @@ export class TagService {
 
   async getAllTagContents(idTag: number, userId: number){
 
-    await this.tagRepository.getAllTagContents(idTag, userId);
+    return await this.tagRepository.getAllTagContents(idTag, userId);
   
   }
 
