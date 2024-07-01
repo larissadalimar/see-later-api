@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { Console } from 'console';
 import { DatabaseService } from 'src/database/database.service';
 import { TagRepository } from 'src/tag/tag.repository';
 import { CreateContentDto } from './dto/create-content.dto';
@@ -242,12 +243,17 @@ export class ContentRepository {
             c.id = $1 AND c."userId" = $2;
           `, [id, userId]);
 
-      let contentCategories = beforeContentCategories.rows.map(id => id.category_id);
+          
+      let contentCategories = beforeContentCategories.rows.filter(id => {  if(id.category_id !== null)  id.category_id });
 
-      let categoriesToRemove = contentCategories.filter((category) => !categories.includes(category.toString()))
+      if(contentCategories.length) {
 
-      if(categoriesToRemove[0] !== null ) this.removeTagFromContent(id, categoriesToRemove);
+        let categoriesToRemove = contentCategories.filter((category) => !categories.includes(category.toString()));
+  
+        if(categoriesToRemove[0] !== null ) this.removeTagFromContent(id, categoriesToRemove);
 
+      }
+      
       const newTags = categories.filter(elemento => !contentCategories.includes(elemento))
 
       if(newTags[0] !== null )  this.addTagToContent(id, newTags);
@@ -260,6 +266,8 @@ export class ContentRepository {
 
 
       const result = await this.databaseService.query(`UPDATE contents SET` + sqlFormatted + ` WHERE id = $1 and "userId" = $2 RETURNING *`, [id, userId]);
+
+      console.log(result.rows);
 
       if (result.rows?.length > 0)
         return result.rows[0];
